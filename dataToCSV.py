@@ -1,6 +1,8 @@
 import numpy as np
 
-def writeToFile(fileName, data):
+def writeToFile(fileName, data, verbose=False):
+	if verbose:
+		print(data)
 	with open(fileName, 'w') as file:
 		file.write('0, 0, Header, 1, 1, 480\n')
 		file.write('1, 0, Start_track\n')
@@ -15,4 +17,4 @@ if __name__ == '__main__':
 	for i in range(64):
 		testData.append( [i*80, random.randint(60,80), random.randint(60,80)] )
 	testData = np.array(testData)
-	writeToFile('out.csv', testData)
+	writeToFile('out.csv', testData, False)

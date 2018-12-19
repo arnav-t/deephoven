@@ -8,6 +8,9 @@ whitelist = [
 	'Note_on_c'
 ]
 
+TIME_FAC = 10000.0
+KEY_FAC = 100.0
+
 def processCSV(inFile, outFile):
 	data = torch.tensor([])
 	with open(inFile, 'r') as inCSV:
@@ -32,7 +35,7 @@ def processCSV(inFile, outFile):
 					offset = int(cells[1])
 
 				time = float(cells[1]) - offset
-				batch = torch.cat(( batch, torch.tensor([[time, float(cells[4]), float(cells[5])]]) ))
+				batch = torch.cat(( batch, torch.tensor([[time/TIME_FAC, float(cells[4])/KEY_FAC, float(cells[5])/KEY_FAC]]) ))
 	
 	outData = data
 	if os.path.isfile(outFile):
