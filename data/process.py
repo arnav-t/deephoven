@@ -8,34 +8,33 @@ whitelist = [
 	'Note_on_c'
 ]
 
-TIME_FAC = 10000.0
 KEY_FAC = 100.0
 
 def processCSV(inFile, outFile):
 	data = torch.tensor([])
 	with open(inFile, 'r') as inCSV:
 		batchLen = 0
-		offset = 0
 		trackNum = '1'
 		batch = torch.tensor([])
 		for line in inCSV:
 			if any(substring in line for substring in whitelist):
-				batchLen += 1
 				cells = line.strip().split(',')
+			
+				if cells[-1] == ' 0':
+					continue
+
+				batchLen += 1
 
 				if batchLen >= BATCH_SIZE:
 					data = torch.cat(( data, batch.unsqueeze(0) ))
 					batch = torch.tensor([])
 					batchLen = 0
-					offset = int(cells[1])
 				if cells[0]	!= trackNum:
 					trackNum = cells[0]
 					batch = torch.tensor([])
 					batchLen = 0
-					offset = int(cells[1])
 
-				time = float(cells[1]) - offset
-				batch = torch.cat(( batch, torch.tensor([[time/TIME_FAC, float(cells[4])/KEY_FAC, float(cells[5])/KEY_FAC]]) ))
+				batch = torch.cat(( batch, torch.tensor([float(cells[4])/KEY_FAC]) ))
 	
 	outData = data
 	if os.path.isfile(outFile):
