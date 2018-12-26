@@ -5,44 +5,51 @@ from NotesDataset import NotesDataset
 from NotesNet import NotesNet
 
 DATASET_FILE = './data/data.pt'
-BATCH_SIZE = 32
-INPUT_DIMS = 64
-OUTPUT_DIMS = 64
+BATCH_SIZE = 1
+SEQ_LEN = 64
+HIDDEN_DIMS = 128
 STATE_DICT = 'state.pt'
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else "cpu")
+# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 
+print('Loading dataset...')
 dataset = NotesDataset(DATASET_FILE, device)
+print('Dataset loaded.\n')
 trainLoader = torch.utils.data.DataLoader(
 	dataset=dataset,
 	batch_size=BATCH_SIZE,
 	shuffle=False
 )
 
-model = NotesNet(INPUT_DIMS, OUTPUT_DIMS, device)
-criterion = nn.BCELoss()
+print('Loading model...')
+model = NotesNet(HIDDEN_DIMS, device)
+criterion = nn.NLLLoss()
 optimizer = torch.optim.Adam( model.parameters() )
-# inp = np.divide(np.arange(NOTES_PER_INPUT)[np.newaxis].T, NOTES_PER_INPUT).astype(float)
-# inp = torch.tensor( np.repeat(np.expand_dims(inp, axis=0), BATCH_SIZE, axis=0) )
-# inp = torch.zeros(BATCH_SIZE, NOTES_PER_INPUT, INPUT_DIMS).to(device)
+print('Model loaded.\n')
 
-
+print('Training...')
 def train(epoch):
 	model.train()
 	for batchNum, target in enumerate(trainLoader):
 		if target.size()[0] != BATCH_SIZE:
 			continue
 		target = target.to(device)
-		inp = torch.randn(1, BATCH_SIZE, INPUT_DIMS).to(device)
+		
+		loss = 0
 		optimizer.zero_grad()
-		output = model(inp)
-		loss = criterion(output, target)
+		output = model.initHidden(BATCH_SIZE, HIDDEN_DIMS).to(device)
+		for i in range(SEQ_LEN):
+			output = model(output)
+			loss += criterion(output.squeeze(0), target[0][i].long().unsqueeze(0))
 		loss.backward()
 		optimizer.step()
+
 		if batchNum%20 == 0:
 			print(f'Epoch: {epoch}, Batch: {batchNum}, Loss: {loss}')
 
 if __name__ == '__main__':
-	for epoch in range(1,5):
+	for epoch in range(1,2):
 		train(epoch)
+	print(f'\nSaving to {STATE_DICT}.')
 	torch.save( model.state_dict(), STATE_DICT )

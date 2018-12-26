@@ -8,7 +8,10 @@ whitelist = [
 	'Note_on_c'
 ]
 
-KEY_FAC = 100.0
+def toOneHot(note):
+	oneHot = torch.zeros(128)
+	oneHot[note] = 1
+	return oneHot
 
 def processCSV(inFile, outFile):
 	data = torch.tensor([])
@@ -34,7 +37,7 @@ def processCSV(inFile, outFile):
 					batch = torch.tensor([])
 					batchLen = 0
 
-				batch = torch.cat(( batch, torch.tensor([float(cells[4])/KEY_FAC]) ))
+				batch = torch.cat(( batch, torch.tensor( [float(cells[4])] ) ))
 	
 	outData = data
 	if os.path.isfile(outFile):

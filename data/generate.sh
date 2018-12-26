@@ -7,6 +7,7 @@ convert () {
 	rm temp.csv
 }
 
+rm data.pt
 find ./raw -name '*.mid' | while read midi; do
 	convert $midi
 done
