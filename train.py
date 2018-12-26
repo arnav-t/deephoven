@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from NotesDataset import NotesDataset
+from NotesDataset import toOneHot
 from NotesNet import NotesNet
 
 DATASET_FILE = './data/data.pt'
@@ -19,7 +20,7 @@ print('Dataset loaded.\n')
 trainLoader = torch.utils.data.DataLoader(
 	dataset=dataset,
 	batch_size=BATCH_SIZE,
-	shuffle=False
+	shuffle=True
 )
 
 print('Loading model...')
@@ -31,22 +32,27 @@ print('Model loaded.\n')
 print('Training...')
 def train(epoch):
 	model.train()
+	loss = 0
 	for batchNum, target in enumerate(trainLoader):
 		if target.size()[0] != BATCH_SIZE:
 			continue
 		target = target.to(device)
 		
-		loss = 0
 		optimizer.zero_grad()
-		output = model.initHidden(BATCH_SIZE, HIDDEN_DIMS).to(device)
-		for i in range(SEQ_LEN):
-			output = model(output)
-			loss += criterion(output.squeeze(0), target[0][i].long().unsqueeze(0))
-		loss.backward()
-		optimizer.step()
+		inp, output = model.initHidden(HIDDEN_DIMS)
+		inp = inp.to(device)
+		output = output.to(device)
+		for i in range(SEQ_LEN - 1):
+			if i >= 1:
+				inp = toOneHot( int(target[0][i]) ).unsqueeze(0).to(device)
+			output = model(inp, output)
+			loss += criterion(output, target[0][i+1].long().unsqueeze(0))
 
 		if batchNum%20 == 0:
+			loss.backward()
+			optimizer.step()
 			print(f'Epoch: {epoch}, Batch: {batchNum}, Loss: {loss}')
+			loss = 0
 
 if __name__ == '__main__':
 	for epoch in range(1,2):
